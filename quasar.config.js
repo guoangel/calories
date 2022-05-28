@@ -144,9 +144,9 @@ module.exports = configure(function (ctx) {
       
 
       manifest: {
-        name: `Quasar App`,
-        short_name: `Quasar App`,
-        description: `A Quasar Project`,
+        name: `PWA Calories Caculation`,
+        short_name: `Calories Caculation`,
+        description: `A Calories Caculation Project`,
         display: 'standalone',
         orientation: 'portrait',
         background_color: '#ffffff',
