@@ -9,7 +9,8 @@
     "dev": "quasar dev",
     "build": "quasar build",
     "build:pwa": "quasar build -m pwa",
-    "icons": "icongenie generate -i app-icon.png --skip-trim --theme-color 212121"
+    "icons": "icongenie generate -i app-icon.png --skip-trim --theme-color 212121",
+    "deploy": "push-dir --dir=dist/pwa --remote=gh-pages --branch=master"
   },
   "dependencies": {
     "@quasar/extras": "^1.0.0",
@@ -21,6 +22,7 @@
   },
   "devDependencies": {
     "@quasar/app-webpack": "^3.0.0",
+    "push-dir": "^0.4.1",
     "workbox-webpack-plugin": "^6.0.0"
   },
   "browserslist": [
