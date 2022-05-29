@@ -40,6 +40,8 @@
 </template>
 
 <script>
+import { NavigationRoute } from 'workbox-routing'
+
 var qs = require('qs')
 
 export default {
@@ -74,8 +76,13 @@ export default {
         this.items.push(newItem)
         this.$q.loading.hide()
       }).catch(err => {
+        if (!navigator.onLine) {
+          this.$q.notify('Item created offline')
+          this.$q.loading.hide()
+        }
         console.log('err: ', err)
       })
+      this.newItem = ''
     }
 
   },

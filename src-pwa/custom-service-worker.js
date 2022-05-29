@@ -15,13 +15,25 @@
   import {ExpirationPlugin} from 'workbox-expiration'
   import {CacheableResponsePlugin} from 'workbox-cacheable-response'
   import {NetworkFirst} from 'workbox-strategies';
-  
+  import {Queue} from 'workbox-background-sync';
   
 /*
   config
 */
 
   precacheAndRoute(self.__WB_MANIFEST);
+
+  let backgroundSyncSupported = 'sync' in self.registration ? true : false
+  console.log('backgroundSyncSupported: ', backgroundSyncSupported)
+
+/*
+  queue - createPost
+*/
+
+  let createItemQueue = null
+  if (backgroundSyncSupported) {
+    createItemQueue = new Queue('createItemQueue');
+  }
 
 /*
   caching strategies
@@ -43,7 +55,7 @@
   );
 
   registerRoute(
-    ({url}) => url.pathname.startsWith('/items'),
+    ({url}) => url.pathname.startsWith('/posts'),
     new NetworkFirst()
   );
 
@@ -51,3 +63,59 @@
     ({url}) => url.href.startsWith('http'),
     new StaleWhileRevalidate()
   );
+
+/*
+  events - fetch
+*/
+
+  if (backgroundSyncSupported) {
+    self.addEventListener('fetch', (event) => {
+      if (event.request.url.startsWith(`${ process.env.API }/createItem`)) {
+        // Clone the request to ensure it's safe to read when
+        // adding to the Queue.
+        if (!self.navigator.onLine) {
+          const promiseChain = fetch(event.request.clone()).catch((err) => {
+            return createItemQueue.pushRequest({request: event.request});
+          });
+          event.waitUntil(promiseChain);
+        }
+      }
+    });
+  }
+
+/*
+  events - push
+*/
+
+self.addEventListener('push', event => {
+  console.log('Push message received:', event)
+  if (event.data) {
+    let data = JSON.parse(event.data.text())
+    event.waitUntil(
+      self.registration.showNotification(data.title)
+    )
+  }
+})
+
+/*
+  events - Notificationclick
+*/
+
+self.addEventListener('notificationclick', event => {
+  event.waitUntil(
+    event.waitUntil(
+      clients.matchAll().then(clis => {
+        let clientUsingApp = clis.find(cli => {
+          return cli.visibilityState === 'visible'
+        })
+        if (clientUsingApp) {
+          clientUsingApp.navigate('/#/')
+          clientUsingApp.focus()
+        }
+        else {
+          clients.openWindow('/#/')
+        }
+      })
+    ) 
+  )
+})
